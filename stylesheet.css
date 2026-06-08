@@ -23,19 +23,23 @@
     color: #9141ac;
 }
 
+.airgradient-status-maroon {
+    color: #a51d2d;
+}
+
 .airgradient-status-gray,
 .airgradient-status-unknown {
     color: #9a9996;
 }
 
 .airgradient-popup {
-    min-width: 360px;
-    padding: 4px 0;
+    min-width: 420px;
+    padding: 6px 3px;
 }
 
 .airgradient-popup-header {
-    spacing: 10px;
-    padding: 8px 4px 10px;
+    spacing: 3px;
+    padding: 8px 8px 10px;
 }
 
 .airgradient-popup-title {
@@ -44,59 +48,138 @@
 }
 
 .airgradient-popup-subtitle {
-    color: #c0bfbc;
-    font-size: 0.86em;
+    color: #77767b;
+    font-size: 0.82em;
 }
 
 .airgradient-primary-card {
-    border-radius: 10px;
-    padding: 12px;
-    margin: 4px 0 8px;
-    background-color: rgba(255, 255, 255, 0.06);
+    width: 35%;
+    border-radius: 8px;
+    padding: 7px;
+    spacing: 3px;
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
 }
 
 .airgradient-aqi-value {
-    font-size: 2.6em;
+    font-size: 1.25em;
     font-weight: 800;
 }
 
 .airgradient-aqi-level {
-    font-size: 1em;
+    color: #241f31;
+    font-size: 0.78em;
     font-weight: 700;
 }
 
 .airgradient-aqi-description {
-    color: #deddda;
-    font-size: 0.86em;
+    color: #77767b;
+    font-size: 0.82em;
 }
 
-.airgradient-metric-row {
-    padding: 7px 4px;
+.airgradient-aqi-track {
+    margin-top: 2px;
 }
 
-.airgradient-metric-top {
+.airgradient-dashboard-item {
+    padding: 0;
+}
+
+.airgradient-dashboard {
     spacing: 8px;
 }
 
-.airgradient-metric-name {
+.airgradient-dashboard-top-row {
+    spacing: 8px;
+}
+
+.airgradient-climate-column {
+    spacing: 8px;
+    width: 65%;
+}
+
+.airgradient-metric-card-row {
+    spacing: 8px;
+}
+
+.airgradient-metric-card {
     min-width: 96px;
+    border-radius: 8px;
+    padding: 8px;
+    spacing: 4px;
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+}
+
+.airgradient-card-top {
+    spacing: 6px;
+}
+
+.airgradient-status-dot {
+    min-width: 7px;
+    min-height: 7px;
+    border-radius: 999px;
+    background-color: #9a9996;
+}
+
+.airgradient-card-status-blue {
+    background-color: #3584e4;
+}
+
+.airgradient-card-status-green {
+    background-color: #33d17a;
+}
+
+.airgradient-card-status-yellow {
+    background-color: #f5c211;
+}
+
+.airgradient-card-status-orange {
+    background-color: #ff7800;
+}
+
+.airgradient-card-status-red {
+    background-color: #ed333b;
+}
+
+.airgradient-card-status-purple {
+    background-color: #9141ac;
+}
+
+.airgradient-card-status-maroon {
+    background-color: #a51d2d;
+}
+
+.airgradient-card-status-gray {
+    background-color: #9a9996;
+}
+
+.airgradient-card-value-row {
+    spacing: 5px;
+}
+
+.airgradient-metric-name {
+    color: #77767b;
+    font-size: 0.76em;
     font-weight: 600;
 }
 
 .airgradient-metric-value {
+    color: #241f31;
+    font-size: 1.18em;
     font-weight: 700;
 }
 
 .airgradient-metric-unit,
 .airgradient-trend-neutral {
-    color: #c0bfbc;
+    color: #77767b;
 }
 
 .airgradient-bar-track {
     min-height: 5px;
     border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.14);
-    margin-top: 5px;
+    background-color: rgba(127, 127, 127, 0.22);
+    margin-top: 2px;
 }
 
 .airgradient-bar-fill {

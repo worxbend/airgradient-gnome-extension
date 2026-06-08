@@ -34,8 +34,11 @@ const TREND_CLASSES = [
     "airgradient-trend-worse",
     "airgradient-trend-neutral",
 ];
-const COLOR_SCHEME_SCHEMA = "org.gnome.desktop.interface";
+const INTERFACE_SCHEMA = "org.gnome.desktop.interface";
 const COLOR_SCHEME_KEY = "color-scheme";
+const GTK_THEME_KEY = "gtk-theme";
+const USER_THEME_SCHEMA = "org.gnome.shell.extensions.user-theme";
+const USER_THEME_KEY = "name";
 const STYLE_CLASSES = ["airgradient-style-light", "airgradient-style-dark"];
 
 export class PanelStatusIcon {
@@ -357,10 +360,36 @@ function applyStyleClass(actor) {
 }
 
 function isDarkColorScheme() {
+    return [
+        settingsString(INTERFACE_SCHEMA, COLOR_SCHEME_KEY),
+        settingsString(INTERFACE_SCHEMA, GTK_THEME_KEY),
+        settingsString(USER_THEME_SCHEMA, USER_THEME_KEY),
+        ...shellThemeStylesheets(),
+    ].some((value) => value.toLowerCase().includes("dark"));
+}
+
+function settingsString(schemaId, key) {
     try {
-        const settings = new Gio.Settings({ schema_id: COLOR_SCHEME_SCHEMA });
-        return settings.get_string(COLOR_SCHEME_KEY).includes("dark");
+        return new Gio.Settings({ schema_id: schemaId }).get_string(key);
     } catch {
-        return false;
+        return "";
     }
+}
+
+function shellThemeStylesheets() {
+    try {
+        const theme = St.ThemeContext.get_for_stage(
+            globalThis.global.stage,
+        ).get_theme();
+        return [
+            filePath(theme.get_theme_stylesheet()),
+            ...theme.get_custom_stylesheets().map(filePath),
+        ].filter((value) => value.length > 0);
+    } catch {
+        return [];
+    }
+}
+
+function filePath(file) {
+    return file?.get_path?.() ?? file?.get_basename?.() ?? "";
 }

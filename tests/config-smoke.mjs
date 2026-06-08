@@ -29,6 +29,10 @@ assert.deepEqual(defaultConfig(), {
 assert.equal(normalizeServerUrl(""), null);
 assert.equal(normalizeServerUrl("192.168.1.201"), "http://192.168.1.201");
 assert.equal(
+    normalizeServerUrl("http://airgradient.local///"),
+    "http://airgradient.local",
+);
+assert.equal(
     normalizeServerUrl(
         " https://airgradient.local:8443/measures/current?x=1#readings ",
     ),
@@ -36,6 +40,7 @@ assert.equal(
 );
 assert.equal(normalizeServerUrl("ftp://airgradient.local"), null);
 assert.equal(normalizeServerUrl("http://"), null);
+assert.equal(normalizeServerUrl("http://air gradient.local"), null);
 
 assert.equal(normalizeRefreshInterval(null), 30);
 assert.equal(normalizeRefreshInterval(1), 5);

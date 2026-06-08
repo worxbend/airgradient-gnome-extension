@@ -7,7 +7,8 @@ const STATUS_ORDER = {
     orange: 2,
     red: 3,
     purple: 4,
-    gray: 5,
+    maroon: 5,
+    gray: 6,
 };
 
 export const StatusColor = Object.freeze({
@@ -16,6 +17,7 @@ export const StatusColor = Object.freeze({
     Orange: "orange",
     Red: "red",
     Purple: "purple",
+    Maroon: "maroon",
     Gray: "gray",
 });
 
@@ -148,7 +150,7 @@ export function aqiStatusColor(value) {
     if (number <= 150) return StatusColor.Orange;
     if (number <= 200) return StatusColor.Red;
     if (number <= 300) return StatusColor.Purple;
-    return StatusColor.Gray;
+    return StatusColor.Maroon;
 }
 
 export function overallStatus(snapshot) {

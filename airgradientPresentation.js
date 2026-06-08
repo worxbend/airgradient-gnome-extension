@@ -14,6 +14,7 @@ export const STATUS_COLORS = Object.freeze({
     blue: "#3584e4",
     gray: "#9a9996",
     green: "#33d17a",
+    maroon: "#a51d2d",
     orange: "#ff7800",
     purple: "#9141ac",
     red: "#ed333b",
@@ -26,6 +27,7 @@ export const PANEL_STATUS_CLASSES = Object.freeze([
     "airgradient-status-orange",
     "airgradient-status-red",
     "airgradient-status-purple",
+    "airgradient-status-maroon",
     "airgradient-status-gray",
     "airgradient-status-unknown",
 ]);
@@ -142,6 +144,7 @@ export function buildAqiViewModel(snapshot, previousSnapshot) {
     return {
         color: colorForStatus(status),
         description: aqiDescription(value),
+        fillRatio: gaugeRatio(value, 500),
         level: aqiLevel(value),
         status,
         trend: trendView,

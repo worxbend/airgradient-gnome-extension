@@ -81,8 +81,9 @@ assert.equal(nested.pm003_count, 1200);
 assert.equal(co2StatusColor(799.9), "green");
 assert.equal(co2StatusColor(800), "yellow");
 assert.equal(pm25StatusColor(35), "orange");
-assert.equal(aqiStatusColor(301), "gray");
+assert.equal(aqiStatusColor(301), "maroon");
 assert.equal(overallStatus({ aqi: 42, co2: 1500, pm25: 8 }), "orange");
+assert.equal(overallStatus({ aqi: 350, co2: 700, pm25: 8 }), "maroon");
 
 assert.equal(formatMetricValue(24.47), "24.5");
 assert.equal(formatMetricValue(100.2), "100");
@@ -124,6 +125,12 @@ assert.equal(
     cooldownMonitor.evaluateAt({ pm25: 80 }, 20 * 60 * 1000).length,
     1,
 );
+
+const recoveryMonitor = new AlertMonitor(true);
+assert.deepEqual(recoveryMonitor.evaluateAt({ pm25: 80 }, 0), []);
+assert.deepEqual(recoveryMonitor.evaluateAt({ pm25: 8 }, 60 * 1000), []);
+assert.deepEqual(recoveryMonitor.evaluateAt({ pm25: 80 }, 2 * 60 * 1000), []);
+assert.equal(recoveryMonitor.evaluateAt({ pm25: 80 }, 3 * 60 * 1000).length, 1);
 
 cooldownMonitor.setEnabled(false);
 cooldownMonitor.setEnabled(true);

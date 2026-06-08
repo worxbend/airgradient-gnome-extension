@@ -5,6 +5,7 @@ import {
     aqiLevel,
     buildAqiViewModel,
     buildMetricViewModels,
+    colorForStatus,
     endpointForServerUrl,
     panelStatusClass,
 } from "../airgradientPresentation.js";
@@ -14,6 +15,8 @@ assert.equal(
     "http://192.168.1.201/measures/current",
 );
 assert.equal(panelStatusClass("orange"), "airgradient-status-orange");
+assert.equal(panelStatusClass("maroon"), "airgradient-status-maroon");
+assert.equal(colorForStatus("maroon"), "#a51d2d");
 assert.equal(aqiLevel(151), "Unhealthy");
 assert.match(aqiDescription(250), /risk of health effects/u);
 
@@ -41,6 +44,7 @@ const previous = {
 const aqi = buildAqiViewModel(current, previous);
 assert.equal(aqi.value, "71");
 assert.equal(aqi.level, "Moderate");
+assert.equal(aqi.fillRatio, 0.142);
 assert.equal(aqi.trend.className, "trend-improved");
 
 const metrics = buildMetricViewModels(current, previous);

@@ -1,6 +1,7 @@
 // GNOME Shell popup adapter. It renders already-prepared view models and avoids
 // owning sensor parsing, threshold, HTTP, or config policy.
 import Clutter from "gi://Clutter";
+import Gio from "gi://Gio";
 import St from "gi://St";
 
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
@@ -33,6 +34,9 @@ const TREND_CLASSES = [
     "airgradient-trend-worse",
     "airgradient-trend-neutral",
 ];
+const COLOR_SCHEME_SCHEMA = "org.gnome.desktop.interface";
+const COLOR_SCHEME_KEY = "color-scheme";
+const STYLE_CLASSES = ["airgradient-style-light", "airgradient-style-dark"];
 
 export class PanelStatusIcon {
     constructor() {
@@ -85,6 +89,7 @@ export class AirGradientPopup {
 
     _build(menu, onRefresh, onOpenSettings) {
         menu.box.add_style_class_name("airgradient-popup");
+        applyStyleClass(menu.box);
         menu.box.add_child(this._buildHeader());
         menu.addMenuItem(this._buildDashboardItem());
 
@@ -338,4 +343,24 @@ function updateStatusClasses(actor, status) {
         actor.remove_style_class_name(className);
 
     actor.add_style_class_name(`airgradient-card-status-${status ?? "gray"}`);
+}
+
+function applyStyleClass(actor) {
+    for (const className of STYLE_CLASSES)
+        actor.remove_style_class_name(className);
+
+    actor.add_style_class_name(
+        isDarkColorScheme()
+            ? "airgradient-style-dark"
+            : "airgradient-style-light",
+    );
+}
+
+function isDarkColorScheme() {
+    try {
+        const settings = new Gio.Settings({ schema_id: COLOR_SCHEME_SCHEMA });
+        return settings.get_string(COLOR_SCHEME_KEY).includes("dark");
+    } catch {
+        return false;
+    }
 }

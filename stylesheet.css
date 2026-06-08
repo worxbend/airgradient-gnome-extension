@@ -182,6 +182,29 @@
     margin-top: 2px;
 }
 
+.airgradient-style-dark .airgradient-primary-card,
+.airgradient-style-dark .airgradient-metric-card {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.airgradient-style-dark .airgradient-aqi-level,
+.airgradient-style-dark .airgradient-metric-value {
+    color: #f6f5f4;
+}
+
+.airgradient-style-dark .airgradient-popup-subtitle,
+.airgradient-style-dark .airgradient-aqi-description,
+.airgradient-style-dark .airgradient-metric-name,
+.airgradient-style-dark .airgradient-metric-unit,
+.airgradient-style-dark .airgradient-trend-neutral {
+    color: #c0bfbc;
+}
+
+.airgradient-style-dark .airgradient-bar-track {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
 .airgradient-bar-fill {
     min-height: 5px;
     border-radius: 999px;

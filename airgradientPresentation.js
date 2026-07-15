@@ -125,7 +125,7 @@ export function buildAqiViewModel(snapshot, previousSnapshot) {
 export function buildMetricViewModel(definition, snapshot, previousSnapshot) {
     const value = snapshot?.[definition.key] ?? null;
     const unit = metricUnit(snapshot, definition);
-    const status = metricStatus(definition, value);
+    const status = metricStatus(definition, value, unit);
 
     return {
         color: colorForStatus(status),
@@ -154,7 +154,7 @@ function metricUnit(snapshot, definition) {
     return definition.unit;
 }
 
-function metricStatus(definition, value) {
-    if (definition.classifyStatus) return definition.classifyStatus(value);
+function metricStatus(definition, value, unit) {
+    if (definition.classifyStatus) return definition.classifyStatus(value, unit);
     return "gray";
 }

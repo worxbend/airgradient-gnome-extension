@@ -5,10 +5,12 @@ import {
     aqiStatusColor,
     co2StatusColor,
     formatMetricValue,
+    noxStatusColor,
     overallStatus,
     parseAirMeasurements,
     pm25StatusColor,
     trend,
+    tvocStatusColor,
 } from "../airgradientSensors.js";
 
 const localServerPayload = {
@@ -40,12 +42,9 @@ assert.equal(snapshot.temperature, 24.47);
 assert.equal(snapshot.humidity, 49);
 assert.equal(snapshot.tvoc, 100);
 assert.equal(snapshot.tvocUnit, "index");
-assert.equal(snapshot.tvoc_unit, "index");
 assert.equal(snapshot.nox, 1);
 assert.equal(snapshot.noxUnit, "index");
-assert.equal(snapshot.nox_unit, "index");
 assert.equal(Math.round(snapshot.aqi), 29);
-assert.equal(snapshot.pm003_count, 442);
 
 const nestedPayload = {
     device: {
@@ -76,7 +75,6 @@ assert.equal(nested.tvocUnit, "index");
 assert.equal(nested.nox, 3);
 assert.equal(nested.noxUnit, "index");
 assert.equal(nested.pm003Count, 1200);
-assert.equal(nested.pm003_count, 1200);
 
 assert.equal(co2StatusColor(799.9), "green");
 assert.equal(co2StatusColor(800), "yellow");
@@ -84,6 +82,37 @@ assert.equal(pm25StatusColor(35), "orange");
 assert.equal(aqiStatusColor(301), "maroon");
 assert.equal(overallStatus({ aqi: 42, co2: 1500, pm25: 8 }), "orange");
 assert.equal(overallStatus({ aqi: 350, co2: 700, pm25: 8 }), "maroon");
+
+// Regression: PM2.5 values that used to fall in the gaps between EPA
+// breakpoints (e.g. 12.1-12.05) must not fall through to the AQI-500 fallback.
+assert.equal(
+    Math.round(parseAirMeasurements({ pm02: 12.05 }).aqi),
+    51,
+);
+assert.equal(
+    Math.round(parseAirMeasurements({ pm02: 350.4 }).aqi),
+    400,
+);
+assert.equal(Math.round(parseAirMeasurements({ pm02: 300 }).aqi), 350);
+
+// Regression: NOx/TVOC unit tagging must follow whichever candidate key
+// actually supplied the value, not just "is an index key present anywhere".
+const mixedUnits = parseAirMeasurements({ nox_ppb: 5, noxIndex: 300 });
+assert.equal(mixedUnits.nox, 5);
+assert.equal(mixedUnits.noxUnit, "ppb");
+
+// Regression: index-scale NOx/TVOC readings must not be classified with
+// ppb-scale thresholds.
+assert.equal(tvocStatusColor(100, "index"), "green");
+assert.equal(tvocStatusColor(100, "ppb"), "yellow");
+assert.equal(noxStatusColor(1, "index"), "green");
+assert.equal(noxStatusColor(1, "ppb"), "green");
+assert.equal(noxStatusColor(100, "index"), "orange");
+assert.equal(noxStatusColor(100, "ppb"), "orange");
+
+// Regression: a corrupted/partial 200 OK body must surface as an error
+// instead of silently becoming an all-null "successful" reading.
+assert.throws(() => parseAirMeasurements("{not valid json"));
 
 assert.equal(formatMetricValue(24.47), "24.5");
 assert.equal(formatMetricValue(100.2), "100");

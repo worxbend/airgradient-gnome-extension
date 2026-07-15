@@ -24,29 +24,17 @@ export const StatusColor = Object.freeze({
 export function parseAirMeasurements(raw) {
     const payload = normalizePayload(raw);
 
-    const nox =
-        extractMeasurementValue(payload, ["nox", "no2", "nox_ppb"]) ??
-        extractMeasurementValue(payload, ["noxIndex", "nox_index"]);
-    const noxUnit =
-        nox === null
-            ? null
-            : hasAnyKey(payload, ["noxIndex", "nox_index"])
-              ? "index"
-              : "ppb";
+    const { value: nox, unit: noxUnit } = extractUnitTaggedValue(
+        payload,
+        ["nox", "no2", "nox_ppb"],
+        ["noxIndex", "nox_index"],
+    );
 
-    const tvoc =
-        extractMeasurementValue(payload, [
-            "tvoc",
-            "tvoc_ppb",
-            "tvoc_ppm",
-            "voc",
-        ]) ?? extractMeasurementValue(payload, ["tvocIndex", "tvoc_index"]);
-    const tvocUnit =
-        tvoc === null
-            ? null
-            : hasAnyKey(payload, ["tvocIndex", "tvoc_index"])
-              ? "index"
-              : "ppb";
+    const { value: tvoc, unit: tvocUnit } = extractUnitTaggedValue(
+        payload,
+        ["tvoc", "tvoc_ppb", "tvoc_ppm", "voc"],
+        ["tvocIndex", "tvoc_index"],
+    );
 
     const pm25 = extractMeasurementValue(payload, [
         "pm02",
@@ -89,10 +77,8 @@ export function parseAirMeasurements(raw) {
         co2: extractMeasurementValue(payload, ["rco2", "co2", "co2_ppm"]),
         nox,
         noxUnit,
-        nox_unit: noxUnit,
         tvoc,
         tvocUnit,
-        tvoc_unit: tvocUnit,
         pm1: extractMeasurementValue(payload, [
             "pm1",
             "pm1.0",
@@ -102,7 +88,6 @@ export function parseAirMeasurements(raw) {
         pm25,
         pm10: extractMeasurementValue(payload, ["pm10", "pm10_0"]),
         pm003Count,
-        pm003_count: pm003Count,
     };
 }
 
@@ -124,18 +109,43 @@ export function pm25StatusColor(value) {
     return StatusColor.Red;
 }
 
-export function tvocStatusColor(value) {
+// Sensirion VOC/NOx sensors report either a raw ppb concentration or a
+// unitless 0-500 "index" relative to a rolling baseline; the two scales need
+// different cutoffs. ppb bands below follow common TVOC/NOx ppb exposure
+// guidance. Index bands for TVOC follow AirGradient's published VOC Index
+// bands (baseline 100; 101-199 slight, 200-249 moderate, 250-349 significant,
+// 350-500 severe increase): https://www.airgradient.com/blog/explaining-voc-tvoc-and-voc-index/
+// NOx Index has no published severity bands (Sensirion only documents a
+// baseline of ~1), so the index cutoffs below are a conservative estimate
+// scaled down from the ppb bands to reflect that much lower baseline.
+export function tvocStatusColor(value, unit = "ppb") {
     const number = asFiniteNumber(value);
     if (number === null) return StatusColor.Gray;
+
+    if (unit === "index") {
+        if (number < 200) return StatusColor.Green;
+        if (number < 250) return StatusColor.Yellow;
+        if (number < 350) return StatusColor.Orange;
+        return StatusColor.Red;
+    }
+
     if (number < 65) return StatusColor.Green;
     if (number < 220) return StatusColor.Yellow;
     if (number < 660) return StatusColor.Orange;
     return StatusColor.Red;
 }
 
-export function noxStatusColor(value) {
+export function noxStatusColor(value, unit = "ppb") {
     const number = asFiniteNumber(value);
     if (number === null) return StatusColor.Gray;
+
+    if (unit === "index") {
+        if (number < 2) return StatusColor.Green;
+        if (number < 50) return StatusColor.Yellow;
+        if (number < 200) return StatusColor.Orange;
+        return StatusColor.Red;
+    }
+
     if (number < 20) return StatusColor.Green;
     if (number < 50) return StatusColor.Yellow;
     if (number < 150) return StatusColor.Orange;
@@ -160,8 +170,8 @@ export function overallStatus(snapshot) {
         metricStatus(snapshot.aqi, aqiStatusColor),
         metricStatus(snapshot.pm25, pm25StatusColor),
         metricStatus(snapshot.co2, co2StatusColor),
-        metricStatus(snapshot.tvoc, tvocStatusColor),
-        metricStatus(snapshot.nox, noxStatusColor),
+        metricStatus(snapshot.tvoc, tvocStatusColor, snapshot.tvocUnit),
+        metricStatus(snapshot.nox, noxStatusColor, snapshot.noxUnit),
     ].filter((color) => color !== null);
 
     if (colors.length === 0) return StatusColor.Gray;
@@ -236,11 +246,7 @@ function normalizePayload(raw) {
     if (raw === null || raw === undefined) return {};
     if (typeof raw !== "string") return raw;
 
-    try {
-        return JSON.parse(raw);
-    } catch {
-        return {};
-    }
+    return JSON.parse(raw);
 }
 
 function extractMeasurementValue(raw, candidates) {
@@ -260,6 +266,16 @@ function extractMeasurementValue(raw, candidates) {
     }
 
     return null;
+}
+
+function extractUnitTaggedValue(raw, primaryCandidates, indexCandidates) {
+    const primary = extractMeasurementValue(raw, primaryCandidates);
+    if (primary !== null) return { value: primary, unit: "ppb" };
+
+    const index = extractMeasurementValue(raw, indexCandidates);
+    if (index !== null) return { value: index, unit: "index" };
+
+    return { value: null, unit: null };
 }
 
 function directKeyValue(raw, key) {
@@ -293,28 +309,11 @@ function findNestedKey(raw, key) {
     return null;
 }
 
-function hasAnyKey(raw, candidates) {
-    return candidates.some((key) => {
-        const lower = key.toLowerCase();
-        return hasNestedKey(raw, key) || hasNestedKey(raw, lower);
-    });
-}
-
-function hasNestedKey(raw, key) {
-    if (Array.isArray(raw))
-        return raw.some((value) => hasNestedKey(value, key));
-    if (!isPlainObject(raw)) return false;
-    return (
-        Object.hasOwn(raw, key) ||
-        Object.values(raw).some((value) => hasNestedKey(value, key))
-    );
-}
-
 function isPlainObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function asFiniteNumber(value) {
+export function asFiniteNumber(value) {
     if (typeof value === "number") return Number.isFinite(value) ? value : null;
     if (typeof value !== "string") return null;
     const trimmed = value.trim();
@@ -323,27 +322,33 @@ function asFiniteNumber(value) {
     return Number.isFinite(number) ? number : null;
 }
 
+// EPA PM2.5-to-AQI breakpoints. Ranges are contiguous (each cLow equals the
+// previous cHigh) so every non-negative value matches exactly one band; the
+// previous table left 0.1-wide gaps between bands and merged the 301-400 and
+// 401-500 bands into a single incorrect slope.
 function pm25ToUsAqi(pm25) {
+    if (pm25 < 0) return 0;
+
     const breakpoints = [
-        [0, 12, 0, 50],
-        [12.1, 35.4, 51, 100],
-        [35.5, 55.4, 101, 150],
-        [55.5, 150.4, 151, 200],
-        [150.5, 250.4, 201, 300],
-        [250.5, 500.4, 301, 500],
+        [0, 12.0, 0, 50],
+        [12.0, 35.4, 51, 100],
+        [35.4, 55.4, 101, 150],
+        [55.4, 150.4, 151, 200],
+        [150.4, 250.4, 201, 300],
+        [250.4, 350.4, 301, 400],
+        [350.4, 500.4, 401, 500],
     ];
 
     for (const [cLow, cHigh, iLow, iHigh] of breakpoints) {
-        if (pm25 >= cLow && pm25 <= cHigh) {
+        if (pm25 <= cHigh)
             return ((iHigh - iLow) / (cHigh - cLow)) * (pm25 - cLow) + iLow;
-        }
     }
 
-    return pm25 < 0 ? 0 : 500;
+    return 500;
 }
 
-function metricStatus(value, classifier) {
-    return asFiniteNumber(value) === null ? null : classifier(value);
+function metricStatus(value, classifier, unit) {
+    return asFiniteNumber(value) === null ? null : classifier(value, unit);
 }
 
 function fraction(value) {

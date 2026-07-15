@@ -1,6 +1,8 @@
 // Domain alert policy ported from airgradient-desktop. This module intentionally
 // has no GNOME imports so cooldown, escalation, and consecutive-reading rules
 // can be tested without a running Shell session.
+import { asFiniteNumber } from "./airgradientSensors.js";
+
 export const AlertSeverity = Object.freeze({
     Notice: "notice",
     Warning: "warning",
@@ -94,6 +96,7 @@ const ALERT_POLICIES = Object.freeze([
     {
         kind: ALERT_KIND.tvoc,
         value: (snapshot) => snapshot?.tvoc,
+        unit: (snapshot) => snapshot?.tvocUnit,
         classify: classifyTvocAlert,
         text: (severity) =>
             severity === AlertSeverity.Critical
@@ -109,6 +112,7 @@ const ALERT_POLICIES = Object.freeze([
     {
         kind: ALERT_KIND.nox,
         value: (snapshot) => snapshot?.nox,
+        unit: (snapshot) => snapshot?.noxUnit,
         classify: classifyNoxAlert,
         text: (severity) =>
             severity === AlertSeverity.Critical
@@ -206,7 +210,8 @@ export class AlertMonitor {
     }
 
     _evaluatePolicy(policy, snapshot, now) {
-        const severity = policy.classify(policy.value(snapshot));
+        const unit = policy.unit?.(snapshot);
+        const severity = policy.classify(policy.value(snapshot), unit);
         if (severity === null) {
             this.consecutive.delete(policy.kind);
             this.activeSeverity.delete(policy.kind);
@@ -277,17 +282,34 @@ function classifyPm25Alert(value) {
     return null;
 }
 
-function classifyTvocAlert(value) {
+// Thresholds mirror the ppb/index bands in airgradientSensors.js's
+// tvocStatusColor/noxStatusColor so alert escalation lines up with the
+// severity colors shown in the popup.
+function classifyTvocAlert(value, unit = "ppb") {
     const number = asFiniteNumber(value);
     if (number === null) return null;
+
+    if (unit === "index") {
+        if (number > 350) return AlertSeverity.Critical;
+        if (number > 200) return AlertSeverity.Warning;
+        return null;
+    }
+
     if (number > 660) return AlertSeverity.Critical;
     if (number > 220) return AlertSeverity.Warning;
     return null;
 }
 
-function classifyNoxAlert(value) {
+function classifyNoxAlert(value, unit = "ppb") {
     const number = asFiniteNumber(value);
     if (number === null) return null;
+
+    if (unit === "index") {
+        if (number > 200) return AlertSeverity.Critical;
+        if (number > 50) return AlertSeverity.Warning;
+        return null;
+    }
+
     if (number > 150) return AlertSeverity.Critical;
     if (number > 50) return AlertSeverity.Warning;
     return null;
@@ -305,15 +327,6 @@ function classifyHumidityHighAlert(value) {
     if (number > 75) return AlertSeverity.Critical;
     if (number > 65) return AlertSeverity.Notice;
     return null;
-}
-
-function asFiniteNumber(value) {
-    if (typeof value === "number") return Number.isFinite(value) ? value : null;
-    if (typeof value !== "string") return null;
-    const trimmed = value.trim();
-    if (trimmed.length === 0) return null;
-    const number = Number(trimmed);
-    return Number.isFinite(number) ? number : null;
 }
 
 function toTimestamp(value) {

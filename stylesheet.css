@@ -21,6 +21,12 @@
     font-size: 0.82em;
 }
 
+.airgradient-popup-footer {
+    font-size: 0.75em;
+    color: rgba(127, 127, 127, 0.8);
+    padding: 2px 8px 4px;
+}
+
 .airgradient-primary-card {
     width: 50%;
     border-radius: 8px;

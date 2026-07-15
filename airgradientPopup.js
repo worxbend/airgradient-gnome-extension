@@ -30,8 +30,8 @@ export class AirGradientPopup {
     destroy() {}
 
     updateSnapshot({ serverUrl, snapshot, previousSnapshot, updatedAt }) {
-        this._titleLabel.text = serverUrl ?? "AirGradient";
         this._subtitleLabel.text = `Updated ${updatedAt}`;
+        this._footerLabel.text = serverUrl ?? "";
         this._updateAqi(buildAqiViewModel(snapshot, previousSnapshot));
 
         const metricViews = buildMetricViewModels(snapshot, previousSnapshot);
@@ -41,9 +41,9 @@ export class AirGradientPopup {
         this.setStatus("Latest measurements loaded.");
     }
 
-    updateUnavailable(message) {
-        this._titleLabel.text = "AirGradient";
+    updateUnavailable(message, serverUrl) {
         this._subtitleLabel.text = "No fresh sensor data.";
+        this._footerLabel.text = serverUrl ?? "";
         this.setStatus(`Fetch failed: ${message}`);
     }
 
@@ -62,6 +62,7 @@ export class AirGradientPopup {
         menu.addMenuItem(
             this._buildActionItem("Open Settings", onOpenSettings),
         );
+        menu.addMenuItem(this._buildFooterItem());
     }
 
     _buildHeader() {
@@ -84,11 +85,15 @@ export class AirGradientPopup {
         return header;
     }
 
-    _buildDashboardItem() {
-        const item = new PopupMenu.PopupBaseMenuItem({
+    _buildStaticItem() {
+        return new PopupMenu.PopupBaseMenuItem({
             reactive: false,
             can_focus: false,
         });
+    }
+
+    _buildDashboardItem() {
+        const item = this._buildStaticItem();
         item.add_style_class_name("airgradient-dashboard-item");
 
         const dashboard = new St.BoxLayout({
@@ -185,10 +190,7 @@ export class AirGradientPopup {
     }
 
     _buildStatusItem() {
-        const item = new PopupMenu.PopupBaseMenuItem({
-            reactive: false,
-            can_focus: false,
-        });
+        const item = this._buildStaticItem();
         this._statusLabel = new St.Label({
             text: "Not updated yet.",
             style_class: "airgradient-popup-subtitle",
@@ -200,6 +202,18 @@ export class AirGradientPopup {
     _buildActionItem(label, onActivated) {
         const item = new PopupMenu.PopupMenuItem(label);
         item.connect("activate", onActivated);
+        return item;
+    }
+
+    _buildFooterItem() {
+        const item = this._buildStaticItem();
+        this._footerLabel = new St.Label({
+            text: "",
+            style_class: "airgradient-popup-footer",
+            x_expand: true,
+            x_align: Clutter.ActorAlign.END,
+        });
+        item.add_child(this._footerLabel);
         return item;
     }
 

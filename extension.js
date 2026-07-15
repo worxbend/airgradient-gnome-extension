@@ -190,7 +190,7 @@ const AirGradientIndicator = GObject.registerClass(
         }
 
         _showUnavailable(message) {
-            this._popup.updateUnavailable(message);
+            this._popup.updateUnavailable(message, this._config.server_url);
         }
 
         _sendAlert(alert) {

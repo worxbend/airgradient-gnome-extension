@@ -114,6 +114,15 @@ Or run the workflow manually from GitHub Actions and provide a version such as
 `1.0.0` or `v1.0.0`. The workflow validates the extension, packs it, creates the
 tag for manual runs if needed, and uploads the extension zip to a GitHub Release.
 
+### Publishing to extensions.gnome.org
+
+GNOME does not offer an official API for automated uploads, and every release
+still goes through manual review by GNOME staff regardless of how it's
+submitted. To publish a new version there, download the
+`airgradient@worxbend.dev.shell-extension.zip` asset from the GitHub Release
+and upload it by hand at https://extensions.gnome.org/upload/. This
+deliberately keeps GNOME account credentials out of CI.
+
 Install the bundle for the current user:
 
 ```sh
